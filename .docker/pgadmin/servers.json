@@ -1,0 +1,16 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "ManagedBetter PostgreSQL",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "managedbetter",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "PassFile": "/var/lib/pgadmin/pgpass",
+      "Comment": "Auto-configured PostgreSQL server for ManagedBetter"
+    }
+  }
+}
+

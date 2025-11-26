@@ -1,0 +1,122 @@
+# ManagedBetter Project Rules
+
+## Frontend Folder Structure
+
+The frontend (Next.js) should follow these folder structure conventions:
+
+### Server Actions
+- **Location**: `frontend/src/actions/`
+- **Naming**: `<name>.action.ts`
+- **Purpose**: Server actions for Next.js server-side operations
+- **Example**: `frontend/src/actions/user.action.ts`
+
+### Services
+- **Location**: `frontend/src/services/`
+- **Naming**: `<name>.service.ts`
+- **Purpose**: Services are responsible for calling APIs and external services
+- **Usage**: Services should be called by actions, not directly from components
+- **Example**: `frontend/src/services/api.service.ts`
+
+### Libraries/Clients
+- **Location**: `frontend/src/lib/`
+- **Purpose**: Return libraries or clients (e.g., API clients, utility libraries, third-party SDKs)
+- **Example**: `frontend/src/lib/api-client.ts`
+
+### Architecture Flow
+1. **Components** → Call **Actions**
+2. **Actions** → Call **Services**
+3. **Services** → Call **APIs/External Services**
+4. **Lib** → Provides reusable libraries and clients
+
+### Frontend API Communication
+- **All API calls from the frontend MUST use Server Actions** (Next.js server actions)
+- Server actions run on the server side, providing better security and performance
+- Direct API calls from client components are **NOT allowed** unless there is a specific requirement (e.g., real-time WebSocket connections, third-party SDKs that require client-side access)
+- If a direct API call is needed, it must be documented with a clear reason why server actions cannot be used
+
+### Example Structure
+```
+frontend/src/
+├── actions/
+│   └── user.action.ts
+├── services/
+│   └── api.service.ts
+├── lib/
+│   └── api-client.ts
+└── app/
+    └── ...
+```
+
+## Backend Folder Structure
+
+The backend (NestJS) should follow these folder structure conventions:
+
+### Database
+- **Location**: `backend/src/database/`
+- **Purpose**: All database-related code (entities, migrations, database configuration, etc.)
+- **Example**: `backend/src/database/entities/user.entity.ts`
+
+### Configuration
+- **Location**: `backend/src/config/`
+- **Naming**: `<name>.config.ts`
+- **Purpose**: Configuration files for the application
+- **Example**: `backend/src/config/database.config.ts`
+
+### Filters
+- **Location**: `backend/src/filters/`
+- **Purpose**: Application filters (exception filters, HTTP exception filters, etc.)
+- **Example**: `backend/src/filters/http-exception.filter.ts`
+
+### Modules
+- **Location**: `backend/src/modules/`
+- **Purpose**: Domain-specific modules organized by feature/domain
+- **Structure**: Each module is a directory containing:
+  - `controllers/` - Controllers for the module
+  - `dao/` - Data Access Objects (DAOs)
+  - `dtos/` - Data Transfer Objects (DTOs)
+  - `services/` - Services for business logic
+  - `<name>.module.ts` - Main module file (in the root of the module directory)
+
+### Module Example Structure
+```
+backend/src/modules/
+└── user/
+    ├── controllers/
+    │   └── user.controller.ts
+    ├── dao/
+    │   └── user.dao.ts
+    ├── dtos/
+    │   ├── create-user.dto.ts
+    │   └── update-user.dto.ts
+    ├── services/
+    │   └── user.service.ts
+    └── user.module.ts
+```
+
+### Backend Example Structure
+```
+backend/src/
+├── config/
+│   ├── database.config.ts
+│   └── app.config.ts
+├── database/
+│   └── entities/
+│       └── user.entity.ts
+├── filters/
+│   └── http-exception.filter.ts
+├── modules/
+│   ├── user/
+│   │   ├── controllers/
+│   │   ├── dao/
+│   │   ├── dtos/
+│   │   ├── services/
+│   │   └── user.module.ts
+│   └── auth/
+│       ├── controllers/
+│       ├── dao/
+│       ├── dtos/
+│       ├── services/
+│       └── auth.module.ts
+└── main.ts
+```
+

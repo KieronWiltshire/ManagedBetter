@@ -1,0 +1,19 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{ts,tsx,js,jsx,json,jsonc,css,scss,html,md,yml,yaml,toml,xml}]
+end_of_line = lf
+
+[*.{bat,cmd,ps1}]
+end_of_line = crlf
+
+[*.md]
+trim_trailing_whitespace = false
+

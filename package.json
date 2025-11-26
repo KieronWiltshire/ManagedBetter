@@ -1,0 +1,27 @@
+{
+  "name": "managed-better",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build": "npm run build:backend && npm run build:frontend",
+    "docker:up": "docker-compose --env-file backend/.env up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "description": "Monorepo for ManagedBetter application",
+  "author": "",
+  "license": "MIT"
+}
+
