@@ -16,6 +16,9 @@ import cookieConfig from './config/cookie.config';
 import sqlConfig from './config/sql.config';
 import redisConfig from './config/redis.config';
 import appConfig from './config/app.config';
+import { KyselyModule } from 'nestjs-kysely';
+import { MysqlDialect } from 'kysely';
+import { DATABASE_POOL } from './postgres/constants/postgres.constants';
 
 @Module({
   imports: [
@@ -43,6 +46,15 @@ import appConfig from './config/app.config';
     }),
     PostgresModule,
     ScheduleModule.forRoot(),
+    KyselyModule.forRootAsync({
+      imports: [PostgresModule],
+      inject: [DATABASE_POOL],
+      useFactory: (postgresPool: any) => ({
+        dialect: new MysqlDialect({
+          pool: postgresPool,
+        }),
+      }),
+    }),
   ],
   providers: [
     {

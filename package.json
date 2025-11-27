@@ -13,6 +13,7 @@
     "build:backend": "npm run build --workspace=backend",
     "build:frontend": "npm run build --workspace=frontend",
     "build": "npm run build:backend && npm run build:frontend",
+    "kysely": "npm run kysely --workspace=backend --",
     "docker:up": "docker-compose --env-file backend/.env up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f"
