@@ -97,29 +97,21 @@ export class AuthModule
 	configure(consumer: MiddlewareConsumer): void {
 		if (this.options?.disableControllers) return;
 
-		const auth = getAuthInstance(this.options.auth);
-		const trustedOrigins = auth.options.trustedOrigins;
-		// function-based trustedOrigins requires a Request (from web-apis) object to evaluate, which is not available in NestJS (we only have a express Request object)
-		// if we ever need this, take a look at better-call which show an implementation for this
-		const isNotFunctionBased = trustedOrigins && Array.isArray(trustedOrigins);
-
-		if (!this.options.disableTrustedOriginsCors && isNotFunctionBased) {
+		if (!this.options.disableTrustedOriginsCors) {
 			this.adapter.httpAdapter.enableCors({
-				origin: trustedOrigins,
+				origin: function (origin, callback) {
+					const auth = getAuthInstance(this.options.auth);
+					const trustedOrigins = auth.options.trustedOrigins;
+					
+					callback(null, trustedOrigins);
+				},
 				methods: ["GET", "POST", "PUT", "DELETE"],
 				credentials: true,
 			});
-		} else if (
-			trustedOrigins &&
-			!this.options.disableTrustedOriginsCors &&
-			!isNotFunctionBased
-		)
-			throw new Error(
-				"Function-based trustedOrigins not supported in NestJS. Use string array or disable CORS with disableTrustedOriginsCors: true.",
-			);
+		}
 
 		// Get basePath from options or use default
-		let basePath = auth.options.basePath ?? "/api/auth";
+		let basePath = getAuthInstance(this.options.auth).options.basePath ?? "/api/auth";
 
 		// Ensure basePath starts with /
 		if (!basePath.startsWith("/")) {
@@ -135,12 +127,12 @@ export class AuthModule
 			consumer.apply(SkipBodyParsingMiddleware(basePath)).forRoutes("*path");
 		}
 
-		const handler = toNodeHandler(auth);
 		this.adapter.httpAdapter
 			.getInstance()
 			// little hack to ignore any global prefix
 			// for now i'll just not support a global prefix
 			.use(`${basePath}/*path`, (req: Request, res: Response) => {
+				const handler = toNodeHandler(getAuthInstance(this.options.auth));
 				if (this.options.middleware) {
 					return this.options.middleware(req, res, () => handler(req, res));
 				}
