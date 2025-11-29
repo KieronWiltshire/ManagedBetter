@@ -13,12 +13,6 @@ async function bootstrap() {
   const config = app.get(ConfigService);
   const logger = app.get<Logger>(Logger);
 
-  // Enable CORS for frontend communication
-  app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true,
-  });
-
   if (config.get<boolean>('app.debug')) {
     app.getHttpAdapter().getInstance().set('json spaces', 2);
   } else {

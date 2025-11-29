@@ -13,7 +13,7 @@ import {
 } from "@nestjs/core";
 import { toNodeHandler } from "better-auth/node";
 import { createAuthMiddleware } from "better-auth/plugins";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import {
 	type ASYNC_OPTIONS_TYPE,
 	type AuthModuleOptions,
@@ -27,7 +27,10 @@ import { AFTER_HOOK_KEY, BEFORE_HOOK_KEY, HOOK_KEY } from "@/auth/constants/auth
 import { AuthGuard } from "@/auth/guards/auth.guard";
 import { APP_GUARD } from "@nestjs/core";
 import { getAuthInstance } from "@/auth/utilities/auth.utilities";
-import type { AuthProvider } from "@/auth/interfaces/auth-provider.interface";
+import { ConfigService } from "@nestjs/config";
+import { InstallerModule } from "@/modules/installer/installer.module";
+import { InstallerService } from "@/modules/installer/services/installer.service";
+import { NotInstalledException } from "@/modules/installer/exceptions/not-installed.exception";
 
 const HOOKS = [
 	{ metadataKey: BEFORE_HOOK_KEY, hookType: "before" as const },
@@ -42,7 +45,7 @@ export type Auth = any;
  * Provides authentication middleware, hooks, and exception handling.
  */
 @Module({
-	imports: [DiscoveryModule],
+	imports: [DiscoveryModule, InstallerModule],
 	providers: [AuthService],
 	exports: [AuthService],
 })
@@ -52,6 +55,8 @@ export class AuthModule
 {
 	private readonly logger = new Logger(AuthModule.name);
 	constructor(
+		@Inject(ConfigService)
+		private readonly configService: ConfigService,
 		@Inject(DiscoveryService)
 		private readonly discoveryService: DiscoveryService,
 		@Inject(MetadataScanner)
@@ -59,7 +64,9 @@ export class AuthModule
 		@Inject(HttpAdapterHost)
 		private readonly adapter: HttpAdapterHost,
 		@Inject(MODULE_OPTIONS_TOKEN)
-		private readonly options: AuthModuleOptions
+		private readonly options: AuthModuleOptions,
+		@Inject(InstallerService)
+		private readonly installerService: InstallerService,
 	) {
 		super();
 	}
@@ -98,11 +105,13 @@ export class AuthModule
 		if (this.options?.disableControllers) return;
 
 		if (!this.options.disableTrustedOriginsCors) {
+			const auth = getAuthInstance(this.options.auth);
+			
 			this.adapter.httpAdapter.enableCors({
-				origin: function (origin, callback) {
-					const auth = getAuthInstance(this.options.auth);
-					const trustedOrigins = auth.options.trustedOrigins;
-					
+				origin: (origin, callback) => {
+					const trustedOrigins = [
+						`http://${this.configService.get('app.domain')}:3001`
+					];
 					callback(null, trustedOrigins);
 				},
 				methods: ["GET", "POST", "PUT", "DELETE"],
@@ -129,9 +138,14 @@ export class AuthModule
 
 		this.adapter.httpAdapter
 			.getInstance()
-			// little hack to ignore any global prefix
-			// for now i'll just not support a global prefix
-			.use(`${basePath}/*path`, (req: Request, res: Response) => {
+			.use(`${basePath}`, async (req: Request, res: Response, next: NextFunction) => {
+				const status = await this.installerService.getInstaller();
+				if (!status.installed) {
+					throw new NotInstalledException();
+				}
+				next();
+			})
+			.use(`${basePath}/*path`, async (req: Request, res: Response, next) => {
 				const handler = toNodeHandler(getAuthInstance(this.options.auth));
 				if (this.options.middleware) {
 					return this.options.middleware(req, res, () => handler(req, res));

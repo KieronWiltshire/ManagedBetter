@@ -1,4 +1,6 @@
-import { ClassSerializerInterceptor, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ClassSerializerInterceptor, Inject, MiddlewareConsumer, Module, NestModule, OnModuleInit } from '@nestjs/common';
+import { HttpAdapterHost } from '@nestjs/core';
+import type { NextFunction, Request, Response } from 'express';
 import { ConfigModule, ConfigService, registerAs } from '@nestjs/config';
 import { PostgresModule } from '@/postgres/postgres.module';
 import { RedisModule } from '@/redis/redis.module';
@@ -21,6 +23,9 @@ import { MysqlDialect } from 'kysely';
 import { DATABASE_POOL } from './postgres/constants/postgres.constants';
 import { InstallationCheckMiddleware } from './middleware/installation-check.middleware';
 import { InstallerModule } from './modules/installer/installer.module';
+import { BetterAuthModule } from './modules/betterauth/betterauth.module';
+import { BetterAuthService } from './modules/betterauth/services/betterauth.service';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -62,7 +67,17 @@ import { InstallerModule } from './modules/installer/installer.module';
         }),
       }),
     }),
+    BetterAuthModule,
     InstallerModule,
+    AuthModule.forRootAsync({
+      imports: [BetterAuthModule],
+      useFactory: (betterAuthService: BetterAuthService) => {
+        return {
+          auth: betterAuthService,
+        };
+      },
+      inject: [BetterAuthService],
+    }),
   ],
   providers: [
     {
@@ -78,7 +93,7 @@ import { InstallerModule } from './modules/installer/installer.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
-    consumer.apply(helmet()).forRoutes('*');
+    // consumer.apply(helmet()).forRoutes('*');
     consumer.apply(InstallationCheckMiddleware).forRoutes('*');
   }
 }

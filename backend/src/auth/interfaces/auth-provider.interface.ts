@@ -9,5 +9,5 @@ export interface AuthProvider<T extends Auth = Auth> {
 	 * Gets the current Better Auth instance
 	 * @returns The Better Auth instance
 	 */
-	instance(): T;
+	getInstance(): T;
 }

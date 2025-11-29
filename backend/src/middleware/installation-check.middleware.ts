@@ -11,7 +11,6 @@ export class InstallationCheckMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction): Promise<void> {
-    // Check installation status
     const status = await this.installerService.getInstaller();
 
     const isInstalled = status.installed;
@@ -20,11 +19,6 @@ export class InstallationCheckMiddleware implements NestMiddleware {
     // If app is installed, block installer routes
     if (isInstalled && isInstallerRoute) {
       throw new NotFoundException();
-    }
-
-    // If app is not installed, block all routes except installer routes
-    if (!isInstalled && !isInstallerRoute) {
-      throw new NotInstalledException();
     }
 
     next();

@@ -29,14 +29,14 @@ export function getRequestFromContext(context: ExecutionContext) {
 export function getAuthInstance<T extends Auth = Auth>(
 	auth: AuthProvider<T> | T,
 ): T {
-	// Check if it's an AuthProvider (has an instance() method)
+	// Check if it's an AuthProvider (has a getInstance() method)
 	if (
 		typeof auth === "object" &&
 		auth !== null &&
-		"instance" in auth &&
-		typeof (auth as AuthProvider<T>).instance === "function"
+		"getInstance" in auth &&
+		typeof (auth as AuthProvider<T>).getInstance === "function"
 	) {
-		return (auth as AuthProvider<T>).instance();
+		return (auth as AuthProvider<T>).getInstance();
 	}
 	// Otherwise, it's a direct Auth instance
 	return auth as T;
