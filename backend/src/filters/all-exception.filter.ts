@@ -28,20 +28,21 @@ import {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const status = exception.getStatus();
-  
+        const { message, error, statusCode, ...meta } = exception.getResponse() as any;
+
         const payload: any = {
-          type: exception.name,
+          type: exception.name.replace(/exception/gi, ''),
           message: exception.message,
-          meta: {
-            status,
-          },
-          stackTrace: undefined,
         };
-  
+
+        if (Object.keys(meta).length > 0) {
+          payload.meta = meta;
+        }
+
         if (this.config.get<boolean>('app.debug')) {
           payload.stackTrace = exception.stack;
         }
-  
+
         response.status(status).json(payload);
       } else {
         super.catch(exception, host);

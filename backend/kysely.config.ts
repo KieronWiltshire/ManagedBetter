@@ -2,22 +2,24 @@ import { defineConfig } from "kysely-ctl";
 import * as path from "path";
 import { PostgresDialect } from "kysely";
 import { Pool } from "pg";
-import dbConfig from "./db/config";
+import sqlConfig from "./src/config/sql.config";
 
-export default defineConfig({
+const config = defineConfig({
     dialect: new PostgresDialect({
         pool: new Pool({
-            host: dbConfig.host,
-            port: dbConfig.port,
-            database: dbConfig.name,
-            user: dbConfig.username,
-            password: dbConfig.password
+            host: sqlConfig.host,
+            port: sqlConfig.port,
+            database: sqlConfig.name,
+            user: sqlConfig.username,
+            password: sqlConfig.password
         }),
     }),
     migrations: {
-        migrationFolder: path.join(__dirname, 'db', 'migrations'),
+        migrationFolder: path.join(__dirname, 'src', 'database', 'migrations'),
     },
     seeds: {
-        seedFolder: path.join(__dirname, 'db', 'seeds'),
+        seedFolder: path.join(__dirname, 'src', 'database', 'seeds'),
     },
 });
+
+export default config;

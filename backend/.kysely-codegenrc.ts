@@ -1,7 +1,7 @@
-import dbConfig from "./db/config.ts";
+import sqlConfig from "./src/config/sql.config.ts";
 
 export default {
     camelCase: false,
-    outFile: 'db/types/db.d.ts',
-    url: `postgresql://${dbConfig.username}:${dbConfig.password}@${dbConfig.host}:${dbConfig.port}/${dbConfig.name}`,
+    outFile: 'src/database/types/db.d.ts',
+    url: `postgresql://${sqlConfig.username}:${sqlConfig.password}@${sqlConfig.host}:${sqlConfig.port}/${sqlConfig.name}`,
 }

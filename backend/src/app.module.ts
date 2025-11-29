@@ -1,5 +1,5 @@
 import { ClassSerializerInterceptor, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService, registerAs } from '@nestjs/config';
 import { PostgresModule } from '@/postgres/postgres.module';
 import { RedisModule } from '@/redis/redis.module';
 import { REDIS_CLIENT } from '@/redis/constants/redis.constants';
@@ -19,13 +19,20 @@ import appConfig from './config/app.config';
 import { KyselyModule } from 'nestjs-kysely';
 import { MysqlDialect } from 'kysely';
 import { DATABASE_POOL } from './postgres/constants/postgres.constants';
+import { InstallationCheckMiddleware } from './middleware/installation-check.middleware';
+import { InstallerModule } from './modules/installer/installer.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       cache: true,
       isGlobal: true,
-      load: [appConfig, cookieConfig, sqlConfig, redisConfig],
+      load: [
+        registerAs('app', () => appConfig),
+        registerAs('cookie', () => cookieConfig),
+        registerAs('sql', () => sqlConfig), 
+        registerAs('redis', () => redisConfig),
+      ],
     }),
     LoggerModule.forRoot(),
     EventEmitterModule.forRoot(),
@@ -55,6 +62,7 @@ import { DATABASE_POOL } from './postgres/constants/postgres.constants';
         }),
       }),
     }),
+    InstallerModule,
   ],
   providers: [
     {
@@ -65,10 +73,12 @@ import { DATABASE_POOL } from './postgres/constants/postgres.constants';
       provide: 'APP_INTERCEPTOR',
       useClass: ClassSerializerInterceptor,
     },
+    InstallationCheckMiddleware,
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
     consumer.apply(helmet()).forRoutes('*');
+    consumer.apply(InstallationCheckMiddleware).forRoutes('*');
   }
 }

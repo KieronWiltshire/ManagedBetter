@@ -2,7 +2,7 @@ import { Kysely, Transaction } from 'kysely';
 import { BaseTransaction } from '@/database/base-transaction';
 import { Injectable } from '@nestjs/common';
 import { InjectKysely } from 'nestjs-kysely';
-import { DB } from 'db/types/db';
+import { DB } from '@/database/types/db';
 
 @Injectable()
 export abstract class KyselyDao<T extends KyselyDao<T>> {

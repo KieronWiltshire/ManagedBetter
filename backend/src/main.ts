@@ -8,6 +8,8 @@ async function bootstrap() {
     bodyParser: false, // Required for Better Auth
   });
 
+  app.setGlobalPrefix('api');
+
   const config = app.get(ConfigService);
   const logger = app.get<Logger>(Logger);
 
