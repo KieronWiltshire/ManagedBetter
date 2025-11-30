@@ -21,7 +21,6 @@ import {
 	MODULE_OPTIONS_TOKEN,
 	type OPTIONS_TYPE,
 } from "@/auth/auth.module-definition";
-import { AuthService } from "@/auth/services/auth.service";
 import { SkipBodyParsingMiddleware } from "@/auth/middleware/skip-body-parsing.middleware";
 import { AFTER_HOOK_KEY, BEFORE_HOOK_KEY, HOOK_KEY } from "@/auth/constants/auth.constants";
 import { AuthGuard } from "@/auth/guards/auth.guard";
@@ -46,8 +45,6 @@ export type Auth = any;
  */
 @Module({
 	imports: [DiscoveryModule, InstallerModule],
-	providers: [AuthService],
-	exports: [AuthService],
 })
 export class AuthModule
 	extends ConfigurableModuleClass
@@ -71,14 +68,14 @@ export class AuthModule
 		super();
 	}
 
-	onModuleInit(): void {
+	async onModuleInit(): Promise<void> {
 		const providers = this.discoveryService
 			.getProviders()
 			.filter(
 				({ metatype }) => metatype && Reflect.getMetadata(HOOK_KEY, metatype),
 			);
 
-		const auth = getAuthInstance(this.options.auth);
+		const auth = await getAuthInstance(this.options.auth);
 		const hasHookProviders = providers.length > 0;
 		const hooksConfigured =
 			typeof auth?.options?.hooks === "object";
@@ -96,16 +93,16 @@ export class AuthModule
 
 			for (const method of methods) {
 				const providerMethod = providerPrototype[method];
-				this.setupHooks(providerMethod, provider.instance);
+				await this.setupHooks(auth, providerMethod, provider.instance);
 			}
 		}
 	}
 
-	configure(consumer: MiddlewareConsumer): void {
+	async configure(consumer: MiddlewareConsumer): Promise<void> {
 		if (this.options?.disableControllers) return;
 
 		if (!this.options.disableTrustedOriginsCors) {
-			const auth = getAuthInstance(this.options.auth);
+			const auth = await getAuthInstance(this.options.auth);
 			
 			this.adapter.httpAdapter.enableCors({
 				origin: (origin, callback) => {
@@ -120,7 +117,7 @@ export class AuthModule
 		}
 
 		// Get basePath from options or use default
-		let basePath = getAuthInstance(this.options.auth).options.basePath ?? "/api/auth";
+		let basePath = (await getAuthInstance(this.options.auth)).options.basePath ?? "/api/auth";
 
 		// Ensure basePath starts with /
 		if (!basePath.startsWith("/")) {
@@ -140,13 +137,13 @@ export class AuthModule
 			.getInstance()
 			.use(`${basePath}`, async (req: Request, res: Response, next: NextFunction) => {
 				const status = await this.installerService.getInstaller();
-				if (!status.installed) {
+				if (!status.isInstalled) {
 					throw new NotInstalledException();
 				}
 				next();
 			})
 			.use(`${basePath}/*path`, async (req: Request, res: Response, next) => {
-				const handler = toNodeHandler(getAuthInstance(this.options.auth));
+				const handler = toNodeHandler(await getAuthInstance(this.options.auth));
 				if (this.options.middleware) {
 					return this.options.middleware(req, res, () => handler(req, res));
 				}
@@ -155,11 +152,11 @@ export class AuthModule
 		this.logger.log(`AuthModule initialized BetterAuth on '${basePath}/*'`);
 	}
 
-	private setupHooks(
+	private async setupHooks(
+		auth: Auth,
 		providerMethod: (...args: unknown[]) => unknown,
 		providerClass: { new (...args: unknown[]): unknown },
 	) {
-		const auth = getAuthInstance(this.options.auth);
 		if (!auth.options.hooks) return;
 
 		for (const { metadataKey, hookType } of HOOKS) {

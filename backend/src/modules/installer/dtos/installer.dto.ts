@@ -1,4 +1,5 @@
 export class InstallerDto {
-    installed: boolean;
+    isInstalled: boolean;
+    migrations: boolean;
 }
 

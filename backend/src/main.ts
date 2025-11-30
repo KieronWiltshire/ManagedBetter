@@ -15,8 +15,6 @@ async function bootstrap() {
 
   if (config.get<boolean>('app.debug')) {
     app.getHttpAdapter().getInstance().set('json spaces', 2);
-  } else {
-    app.useLogger(logger);
   }
 
   const appName = config.get<string>('app.name');

@@ -26,9 +26,9 @@ export function getRequestFromContext(context: ExecutionContext) {
  * @param auth - Either an AuthProvider interface or a direct Auth instance
  * @returns The Auth instance
  */
-export function getAuthInstance<T extends Auth = Auth>(
+export async function getAuthInstance<T extends Auth = Auth>(
 	auth: AuthProvider<T> | T,
-): T {
+): Promise<Awaited<T>> {
 	// Check if it's an AuthProvider (has a getInstance() method)
 	if (
 		typeof auth === "object" &&
@@ -36,8 +36,8 @@ export function getAuthInstance<T extends Auth = Auth>(
 		"getInstance" in auth &&
 		typeof (auth as AuthProvider<T>).getInstance === "function"
 	) {
-		return (auth as AuthProvider<T>).getInstance();
+		return await (auth as AuthProvider<T>).getInstance();
 	}
 	// Otherwise, it's a direct Auth instance
-	return auth as T;
+	return auth as Awaited<T>;
 }
