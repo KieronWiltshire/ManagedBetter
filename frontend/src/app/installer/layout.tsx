@@ -1,5 +1,4 @@
 import { checkInstallationStatus } from '@/actions/installer.action';
-import { auth } from '@/lib/better-auth-client'
 import { notFound, redirect } from 'next/navigation';
 import { PropsWithChildren } from 'react';
 

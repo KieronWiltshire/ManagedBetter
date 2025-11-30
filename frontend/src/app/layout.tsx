@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html className={cn(GeistSans.variable, GeistMono.variable, 'dark antialiased')} lang="en">
-      <body>{children}</body>
+      <body className="min-h-screen">{children}</body>
     </html>
   );
 }

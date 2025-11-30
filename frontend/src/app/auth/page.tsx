@@ -7,7 +7,7 @@ export default async function AuthPage({ children }: PropsWithChildren) {
 	const status = await checkInstallationStatus();
 
 	if(!status.installed) {
-		return redirect('/install');
+		return redirect('/installer');
 	}
 
 	const session = await auth.getSession();
