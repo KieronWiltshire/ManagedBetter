@@ -5,7 +5,7 @@ import { PropsWithChildren } from 'react';
 export default async function DashboardLayout({ children }: PropsWithChildren) {
     const session = await auth.getSession();
 
-    if(!session) {
+    if (!session || session?.error) {
         return redirect('/auth');
     }
 
