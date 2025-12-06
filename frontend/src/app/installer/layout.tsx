@@ -5,7 +5,7 @@ import { PropsWithChildren } from 'react';
 export default async function InstallLayout({ children }: PropsWithChildren) {
     const status = await checkInstallationStatus();
 
-	if(!status.installed) {
+	if(!status.isInstalled) {
 		return children;
 	}
 

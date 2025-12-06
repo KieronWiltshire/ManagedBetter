@@ -1,5 +1,4 @@
-import { Auth } from "@/auth/auth.module.js";
-import { AuthProvider } from "@/auth/interfaces/auth-provider.interface";
+import { AuthProvider, AuthProviderOptions } from "@/auth/interfaces/auth-provider.interface";
 import { InjectPostgres } from "@/postgres/decorators/inject-postgres.decorator";
 import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -7,10 +6,12 @@ import { betterAuth, BetterAuthOptions, SecondaryStorage } from "better-auth";
 import { Pool } from "pg";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Cache } from "cache-manager";
+import { admin } from "better-auth/plugins";
+import { Auth } from "@/auth/auth.module";
 
 @Injectable()
-export class BetterAuthService<T extends Auth = Auth> implements AuthProvider<T> {
-	private betterAuthInstance: T | null = null;
+export class BetterAuthService implements AuthProvider<Auth> {
+	private betterAuthInstance: Auth;
 
 	constructor(
 		@InjectPostgres() protected readonly postgres: Pool,
@@ -18,25 +19,31 @@ export class BetterAuthService<T extends Auth = Auth> implements AuthProvider<T>
 		protected readonly configService: ConfigService,
 	) {}
 
-	async getConfigOptions(): Promise<BetterAuthOptions> {
-		return {
+	async getConfigOptions({ isManagedBetterRequest }: AuthProviderOptions = {}): Promise<BetterAuthOptions> {
+		const signUpEnabled = isManagedBetterRequest; // TODO: check from database if sign up is enabled
+		const disableSignUp = isManagedBetterRequest || signUpEnabled;
+
+		let config: BetterAuthOptions = {
+			emailAndPassword: {
+				enabled: true,
+				disableSignUp,
+			},
 			database: this.postgres,
 			secondaryStorage: this.cacheManager as unknown as SecondaryStorage,
 			secret: this.configService.get('app.secret'),
+			plugins: [
+				admin(),
+			]
 		};
+
+		return config;
 	}
 
-	/**
-	 * Gets the current Better Auth instance
-	 * Creates the instance lazily on first call
-	 * @returns The Better Auth instance
-	 */
-	async getInstance(): Promise<T> {
+	async getInstance(configOptions: AuthProviderOptions = {}): Promise<Auth> {
 		if (!this.betterAuthInstance) {
-			const config = await this.getConfigOptions();
-			this.betterAuthInstance = betterAuth(config) as T;
+			const config = await this.getConfigOptions(configOptions);
+			this.betterAuthInstance = betterAuth(config) as Auth;
 		}
-		return this.betterAuthInstance as T;
+		return this.betterAuthInstance;
 	}
 }
-

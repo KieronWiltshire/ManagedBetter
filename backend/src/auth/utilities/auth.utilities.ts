@@ -1,7 +1,7 @@
 import type { ExecutionContext } from "@nestjs/common";
 import { GqlExecutionContext, type GqlContextType } from "@nestjs/graphql";
 import type { Auth } from "@/auth/auth.module";
-import type { AuthProvider } from "@/auth/interfaces/auth-provider.interface";
+import type { AuthProvider, AuthProviderOptions } from "@/auth/interfaces/auth-provider.interface";
 
 /**
  * Extracts the request object from either HTTP, GraphQL or WebSocket execution context
@@ -28,7 +28,8 @@ export function getRequestFromContext(context: ExecutionContext) {
  */
 export async function getAuthInstance<T extends Auth = Auth>(
 	auth: AuthProvider<T> | T,
-): Promise<Awaited<T>> {
+	providerOptions?: AuthProviderOptions,
+): Promise<T> {
 	// Check if it's an AuthProvider (has a getInstance() method)
 	if (
 		typeof auth === "object" &&
@@ -36,8 +37,8 @@ export async function getAuthInstance<T extends Auth = Auth>(
 		"getInstance" in auth &&
 		typeof (auth as AuthProvider<T>).getInstance === "function"
 	) {
-		return await (auth as AuthProvider<T>).getInstance();
+		return await (auth as AuthProvider<T>).getInstance(providerOptions);
 	}
 	// Otherwise, it's a direct Auth instance
-	return auth as Awaited<T>;
+	return auth as T;
 }

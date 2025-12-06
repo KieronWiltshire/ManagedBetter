@@ -142,8 +142,14 @@ export class AuthModule
 				}
 				next();
 			})
-			.use(`${basePath}/*path`, async (req: Request, res: Response, next) => {
-				const handler = toNodeHandler(await getAuthInstance(this.options.auth));
+			.use(`${basePath}/*path`, async (req: Request, res: Response) => {
+				const originHost = req.headers.origin
+					? req.headers.origin.replace(/^https?:\/\//, '').replace(/:.*$/, '')
+					: undefined;
+
+				const isManagedBetterRequest = originHost === this.configService.get('app.domain');
+				
+				const handler = toNodeHandler(await getAuthInstance(this.options.auth, { isManagedBetterRequest }));
 				if (this.options.middleware) {
 					return this.options.middleware(req, res, () => handler(req, res));
 				}

@@ -13,7 +13,7 @@ import { DATABASE_POOL } from './constants/postgres.constants';
           host: configService.get('sql.host'),
           port: configService.get('sql.port'),
           database: configService.get('sql.database'),
-          user: configService.get('sql.username'),
+          user: configService.get('sql.user'),
           password: configService.get('sql.password')
         });
       },

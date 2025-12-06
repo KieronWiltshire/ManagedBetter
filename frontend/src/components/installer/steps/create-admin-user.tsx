@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import type { BetterAuthInstallData } from "@/actions/installer.action";
-import { installBetterAuth } from "@/actions/installer.action";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { createAdminUser, CreateAdminUserData } from "@/actions/installer.action";
 
-interface SetupBetterAuthProps {
+interface CreateAdminUserProps {
 	onComplete: () => void;
 }
 
-export function SetupBetterAuth({ onComplete }: SetupBetterAuthProps) {
+export function CreateAdminUser({ onComplete }: CreateAdminUserProps) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [formData, setFormData] = useState<BetterAuthInstallData>({
+	const [formData, setFormData] = useState<CreateAdminUserData>({
 		email: "",
 		password: "",
 		name: "",
@@ -27,11 +26,11 @@ export function SetupBetterAuth({ onComplete }: SetupBetterAuthProps) {
 		setError(null);
 
 		try {
-			const result = await installBetterAuth(formData);
-			if (result.success) {
+			const result = await createAdminUser(formData);
+			if (result.adminUserCreated) {
 				onComplete();
 			} else {
-				setError(result.message || "Failed to create admin user");
+				setError("Failed to create admin user");
 			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "An error occurred");
@@ -105,3 +104,4 @@ export function SetupBetterAuth({ onComplete }: SetupBetterAuthProps) {
 		</div>
 	);
 }
+

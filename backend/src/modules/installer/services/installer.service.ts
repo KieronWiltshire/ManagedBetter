@@ -3,34 +3,46 @@ import { InjectKysely } from 'nestjs-kysely';
 import { Kysely, Migrator, FileMigrationProvider } from 'kysely';
 import * as path from 'path';
 import { promises as fs } from 'fs';
-import { InstallerDto } from '../dtos/installer.dto';
-import { InstallBetterAuthDto } from '../dtos/install-better-auth.dto';
-import { MigrationStateDto } from '../dtos/migration-state.dto';
+import { InstallerDto, isInstalled } from '../dtos/installer.dto';
+import { CreateAdminUserDto } from '../dtos/create-admin-user.dto';
 import { BetterAuthService } from '@/modules/betterauth/services/betterauth.service';
 import { AlreadyInstalledException } from '../exceptions/already-installed.exception';
 import { DB } from '@/database/types/db';
 import { Auth } from 'better-auth/*';
 import { getMigrations } from 'better-auth/db';
 import { UnableToConfigureDatabaseException } from '../exceptions/unable-to-configure-database.exception';
+import { AdminOptions } from 'better-auth/plugins';
+import { ManagedBetterService } from '@/modules/managed-better/services/managed-better.service';
 
 @Injectable()
 export class InstallerService {
 	constructor(
-		private readonly betterAuthService: BetterAuthService<Auth>,
+		private readonly betterAuthService: BetterAuthService,
+		private readonly managedBetterService: ManagedBetterService,
 		@InjectKysely() private readonly kysely: Kysely<DB>,
 	) {}
 
 	async getInstaller(): Promise<InstallerDto> {
+		try {
+			const installer = await this.managedBetterService.get<InstallerDto>('installer');
+
+			if (installer) {
+				return installer;
+			}
+		} catch (error) {
+			console.log(error);
+		}
+
 		return {
-			isInstalled: false,
-			migrations: false,
-		};
+			betterAuthConfigured: false,
+			adminUserCreated: false,
+		}
 	}
 
-	async runMigrations(): Promise<InstallerDto> {
+	async configureManagedBetter(): Promise<InstallerDto> {
 		const installer = await this.getInstaller();
 
-		if (installer.isInstalled) {
+		if (isInstalled(installer)) {
 			throw new AlreadyInstalledException();
 		}
 
@@ -51,11 +63,6 @@ export class InstallerService {
 				}),
 			});
 
-			// Run Better Auth migrations
-			const { runMigrations } = await getMigrations(await this.betterAuthService.getConfigOptions());
-			await runMigrations();
-
-			// Run app migrations
 			const { error, results }: any = await migrator.migrateToLatest();
 
 			if (error) {
@@ -67,50 +74,51 @@ export class InstallerService {
 				throw new UnableToConfigureDatabaseException();
 			}
 
-			return {
-				isInstalled: false,
-				migrations: true,
-			}
+			// Run Better Auth migrations
+			const { runMigrations } = await getMigrations(await this.betterAuthService.getConfigOptions());
+			await runMigrations();
+
+			installer.betterAuthConfigured = true;
+
+			// Store installer DTO in ManagedBetterService
+			await this.managedBetterService.set('installer', installer);
+
+			return installer;
 		} catch (error) {
 			throw error;
 		}
 	}
 
-	async installBetterAuth(data: InstallBetterAuthDto): Promise<{ success: boolean; message?: string }> {
+	async createAdminUser({ email, password, name }: CreateAdminUserDto): Promise<InstallerDto> {
 		const installer = await this.getInstaller();
 
-		if (installer.isInstalled) {
+		if (isInstalled(installer)) {
 			throw new AlreadyInstalledException();
 		}
 
 		try {
-			const auth = this.betterAuthService.getInstance();
-			
-			// Create the admin user using Better Auth's signUpEmail API
-			const result = await auth.api.signUpEmail({
+			// Create the admin user using Better Auth's createUser method from admin plugin
+			const auth = await this.betterAuthService.getInstance();
+
+			// Create the admin user
+			await auth.api.createUser({
 				body: {
-					email: data.email,
-					password: data.password,
-					name: data.name,
-				},
+					email,
+					password,
+					name,
+					role: 'admin',
+				}
 			});
 
-			if (result.error) {
-				return {
-					success: false,
-					message: result.error.message || 'Failed to create admin user',
-				};
-			}
+			installer.adminUserCreated = true;
 
-			return {
-				success: true,
-				message: 'Better Auth installed successfully',
-			};
+			// Store installer DTO in ManagedBetterService
+			await this.managedBetterService.set('installer', installer);
+
+			return installer;
 		} catch (error) {
-			return {
-				success: false,
-				message: error instanceof Error ? error.message : 'Failed to install Better Auth',
-			};
+			console.error(error);
+			return installer;
 		}
 	}
 }

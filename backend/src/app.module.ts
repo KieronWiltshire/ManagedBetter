@@ -23,6 +23,7 @@ import { InstallerModule } from './modules/installer/installer.module';
 import { BetterAuthModule } from './modules/betterauth/betterauth.module';
 import { BetterAuthService } from './modules/betterauth/services/betterauth.service';
 import { AuthModule } from './auth/auth.module';
+import { ManagedBetterModule } from './modules/managed-better/managed-better.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { AuthModule } from './auth/auth.module';
         }),
       }),
     }),
+    ManagedBetterModule,
     BetterAuthModule,
     InstallerModule,
     AuthModule.forRootAsync({

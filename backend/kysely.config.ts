@@ -6,13 +6,7 @@ import sqlConfig from "./src/config/sql.config";
 
 const config = defineConfig({
     dialect: new PostgresDialect({
-        pool: new Pool({
-            host: sqlConfig.host,
-            port: sqlConfig.port,
-            database: sqlConfig.name,
-            user: sqlConfig.username,
-            password: sqlConfig.password
-        }),
+        pool: new Pool(sqlConfig),
     }),
     migrations: {
         migrationFolder: path.join(__dirname, 'src', 'database', 'migrations'),

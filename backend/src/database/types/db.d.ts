@@ -3,4 +3,15 @@
  * Please do not edit it manually.
  */
 
-export interface DB {}
+import type { ColumnType } from 'kysely';
+
+export type Json = ColumnType<unknown, string, string>;
+
+export interface DB {
+	managed_better: {
+		key: string;
+		value: Json;
+		created_at: Date;
+		updated_at: Date;
+	};
+}

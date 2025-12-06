@@ -2,8 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StepIndicator } from "./step-indicator";
-import { RunMigrations } from "./steps/run-migrations";
-import { SetupBetterAuth } from "./steps/setup-better-auth";
+import { ConfigureManagedBetter } from "./steps/configure-managed-better";
+import { CreateAdminUser } from "./steps/create-admin-user";
 import { CompletionMessage } from "./completion-message";
 import { useState } from "react";
 
@@ -18,8 +18,8 @@ interface InstallerProps {
 }
 
 const STEPS = [
-	{ number: 1, title: "Run Database Migrations" },
-	{ number: 2, title: "Setup Better Auth" },
+	{ number: 1, title: "Configure ManagedBetter" },
+	{ number: 2, title: "Create Admin User" },
 ] as InstallerStep[];
 
 export function Installer({ 
@@ -47,9 +47,9 @@ export function Installer({
 				<CardContent className="space-y-8">
 					<StepIndicator steps={STEPS} currentStep={currentStep} />
 
-					{currentStep?.number === 1 && <RunMigrations onComplete={handleStepComplete} />}
+					{currentStep?.number === 1 && <ConfigureManagedBetter onComplete={handleStepComplete} />}
 
-					{currentStep?.number === 2 && <SetupBetterAuth onComplete={handleStepComplete} />}
+					{currentStep?.number === 2 && <CreateAdminUser onComplete={handleStepComplete} />}
 
 					{!currentStep && <CompletionMessage />}
 				</CardContent>

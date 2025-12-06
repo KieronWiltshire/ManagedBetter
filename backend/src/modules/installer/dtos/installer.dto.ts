@@ -1,5 +1,9 @@
 export class InstallerDto {
-    isInstalled: boolean;
-    migrations: boolean;
+    betterAuthConfigured: boolean;
+    adminUserCreated: boolean;
+}
+
+export function isInstalled(dto: InstallerDto): boolean {
+    return dto.betterAuthConfigured && dto.adminUserCreated;
 }
 

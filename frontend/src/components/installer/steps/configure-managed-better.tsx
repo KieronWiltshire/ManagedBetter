@@ -1,31 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { runMigrations, type InstallerStatus } from "@/actions/installer.action";
+import { configureManagedBetter, type InstallerStatus } from "@/actions/installer.action";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface RunMigrationsProps {
+interface ConfigureManagedBetterProps {
 	onComplete: () => void;
 }
 
-export function RunMigrations({ onComplete }: RunMigrationsProps) {
+export function ConfigureManagedBetter({ onComplete }: ConfigureManagedBetterProps) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-	const handleRunMigrations = async () => {
+	const handleConfigureManagedBetter = async () => {
 		setLoading(true);
 		setError(null);
 		setSuccessMessage(null);
 
 		try {
-			const result: InstallerStatus = await runMigrations();
-			if (result.migrations) {
-				setSuccessMessage("Migrations completed successfully");
+			const result: InstallerStatus = await configureManagedBetter();
+			if (result.betterAuthConfigured) {
+				setSuccessMessage("ManagedBetter configured successfully");
 				onComplete();
 			} else {
-				setError("Migration failed");
+				setError("Configuration failed");
 			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "An error occurred");
@@ -37,7 +37,7 @@ export function RunMigrations({ onComplete }: RunMigrationsProps) {
 	return (
 		<div className="space-y-4">
 			<div>
-				<h3 className="text-lg font-semibold">Step 1: Run Database Migrations</h3>
+				<h3 className="text-lg font-semibold">Step 1: Configure ManagedBetter</h3>
 				<p className="text-sm text-muted-foreground">
 					Before configuring Better Auth, you must first migrate the database tables.
 					This will create all necessary database structures.
@@ -57,11 +57,11 @@ export function RunMigrations({ onComplete }: RunMigrationsProps) {
 			)}
 
 			<Button
-				onClick={handleRunMigrations}
+				onClick={handleConfigureManagedBetter}
 				disabled={loading || !!successMessage}
 				className="w-full"
 			>
-				{loading ? "Running migrations..." : successMessage ? "Migrations Complete" : "Run Migrations"}
+				{loading ? "Configuring..." : successMessage ? "Configuration Complete" : "Configure ManagedBetter"}
 			</Button>
 		</div>
 	);
